@@ -17,7 +17,7 @@ include("../src/SU2k_sector.jl")
     end
 end
 
-@testset "SU2k_sector.jl" verbose = true begin
+@testset "SU2k_sector" verbose = true begin
     @testset "SU2kIrrep" begin
         include("SU2k_sector_tests.jl")
     end

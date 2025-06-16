@@ -1,5 +1,5 @@
 include("../src/SU2k_sector.jl")
-using Random, Test
+using Random
 using Base.Iterators: take
 
 Random.seed!(123456789)
@@ -13,7 +13,6 @@ smallset(::Type{I}) where {I<:Sector} = take(values(I), length(values(I)))
                 es = collect(intersect(⊗(a, b), map(dual, ⊗(c, dual(d)))))
                 fs = collect(intersect(⊗(b, c), map(dual, ⊗(dual(d), a))))
                 @test length(es) == length(fs)
-                @show a,b,c,d,es, fs
                 F = [Fsymbol(a, b, c, d, e, f) for e in es, f in fs]
                 @test isapprox(F' * F, one(F); atol=1e-12, rtol=1e-12)
             end
