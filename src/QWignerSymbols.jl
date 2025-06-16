@@ -4,36 +4,22 @@ using WignerSymbols: δ, reorder6j
 using HalfIntegers
 using TensorKit
 
-export Phase
 export q_number, q_factorial, q_binomial
 export q_wigner3j, q_clebschgordan, q_wigner6j, q_racahW
 export SU2qIrrep
 
-struct Phase
-    p::Number
-    function Phase(p::Number)
-        return new(p % (2*π))
-    end
-end
-
-Base.:*(p::Phase, q::Phase) = Phase(p.p + q.p)
-Base.:+(p::Phase, q::Phase) = cis(p.p) + cis(q.p)
-Base.:+(p::Phase, x::Number) = cis(p.p) + x
-Base.:+(x::Number, p::Phase) = cis(p.p) + x
-Base.:-(p::Phase, x::Number) = cis(p.p) - x
-Base.:-(x::Number, p::Phase) = cis(p.p) - x
-Base.:^(p::Phase, n::Number) = Phase(n * p.p)
-Base.isone(p::Phase) = iszero(p.p) || iszero(p.p % (2*π))
-Base.real(p::Phase) = cos(p.p)
-Base.ComplexF64(p::Phase) = cis(p.p)
-
 
 # Q-numbers
 # ---------
-q_number(n::Integer, q::Number) = Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
-q_number(n::Integer, q::Phase) = real(sum(i -> q^((n + 1) / 2 - i), 1:n))
+function q_number(n::Integer, q::Number) 
+    if isa(q, Real)
+        return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+    elseif isa(q, ComplexF64)
+        norm(q) ≈ 1.0 || error("q must be either real or a U₁ phase")
+        return real(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+    end
+end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
-q_number(n::Number, q::Phase) = q_number(Int(n), q)
 
 q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init=1.0)
 q_factorial(n::Number, q::Number) = q_factorial(Int(n), q)
