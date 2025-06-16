@@ -17,7 +17,7 @@ function  SU2kIrrep(j, k::Int)
     return SU2kIrrep{k}(j)
 end
 k(::SU2kIrrep{K}) where {K} = K
-q(s::SU2kIrrep{K}) where {K} = Phase(1/(k(s) + 2)) # exp(2*π*im/(k(s)+2))
+q(s::SU2kIrrep{K}) where {K} = exp(2*π*im/(k(s)+2))
 Base.convert(T::Type{<:SU2kIrrep}, j::Real) = T(j)
 
 Base.one(::Type{T}) where {T<:SU2kIrrep} = T(zero(HalfInt))
@@ -54,7 +54,7 @@ end
 function TensorKit.Fsymbol(s1::T, s2::T, s3::T,
     s4::T, s5::T, s6::T) where {T<:SU2kIrrep}
     Nsymbol(s1,s2,s5) && Nsymbol(s5,s3,s4) && Nsymbol(s2,s3,s6) && Nsymbol(s1,s6,s4) || return 0.0
-return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, ComplexF64(q(s1)))
+return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(s1))
 end
 
 function TensorKit.Rsymbol(a::T, b::T, c::T) where {T<:SU2kIrrep}
