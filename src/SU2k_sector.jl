@@ -3,6 +3,20 @@ using TensorKit
 using QWignerSymbols
 using Base: HasLength
 
+"""SU2kIrrep{k}(j)
+
+Represents SU(2)_k irreps.
+
+Type parameters
+- `k` : integer level (k >= 1).
+
+Fields
+- `j::HalfInt` : spin label (half-integer) satisfying 0 <= j <= k/2.
+
+Notes
+- The allowed irreps for a given level `k` are j = 0, 1/2, 1, 3/2, ..., k/2.
+- This type implements the `TensorKit.Sector` API so it can be used as a sector in TensorKit tensors.
+"""
 struct SU2kIrrep{k} <: TensorKit.Sector
     j::HalfInt
     function SU2kIrrep{k}(j) where {k}
