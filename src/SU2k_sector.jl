@@ -67,7 +67,7 @@ function WignerSymbols.δ(j₁, j₂, j₃, k)
     return (j₃ <= j₁ + j₂) && (j₁ <= j₂ + j₃) && (j₂ <= j₃ + j₁) && (j₁ + j₂ + j₃ <= k) && isinteger(j₁+j₂+j₃)
 end
 
-TensorKitSectors.dim(s::SU2kIrrep) = q_number(twice(s.j) + 1, q(s))
+TensorKitSectors.dim(s::SU2kIrrep) = Float64(q_number(twice(s.j) + 1, q(s)))
 
 function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2kIrrep}
     return δ(sa.j, sb.j, sc.j, k(sa))
@@ -86,17 +86,18 @@ function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T<:SU2kIrrep}
 end
 
 # does this still hold for SU2k?
-function TensorKitSectors.fusiontensor(a::T, b::T, c::T) where {T<:SU2kIrrep}
-    da = twice(a.j) + 1
-    db = twice(b.j) + 1
-    dc = twice(c.j) + 1
-    C = Array{Float64}(undef, da, db, dc, 1)
-    ja, jb, jc = a.j, b.j, c.j
+#FIXME: what is the q(T) call here?
+# function TensorKitSectors.fusiontensor(a::T, b::T, c::T) where {T<:SU2kIrrep}
+#     da = twice(a.j) + 1
+#     db = twice(b.j) + 1
+#     dc = twice(c.j) + 1
+#     C = Array{Float64}(undef, da, db, dc, 1)
+#     ja, jb, jc = a.j, b.j, c.j
 
-    for kc in 1:dc, kb in 1:db, ka in 1:da
-        C[ka, kb, kc, 1] = q_clebschgordan(ja, ja + 1 - ka, jb, jb + 1 - kb, jc,
-                                           jc + 1 - kc, q(T))
-    end
+#     for kc in 1:dc, kb in 1:db, ka in 1:da
+#         C[ka, kb, kc, 1] = q_clebschgordan(ja, ja + 1 - ka, jb, jb + 1 - kb, jc,
+#                                            jc + 1 - kc, q(T))
+#     end
 
-    return C
-end
+#     return C
+# end

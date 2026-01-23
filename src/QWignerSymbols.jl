@@ -177,6 +177,8 @@ end
 
 TensorKitSectors.dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
 
+
+#FIXME: what is the q(T) call here?
 # function TensorKitSectors.fusiontensor(a::T, b::T, c::T) where {T<:SU2qIrrep}
 #     da = twice(a.j) + 1
 #     db = twice(b.j) + 1
