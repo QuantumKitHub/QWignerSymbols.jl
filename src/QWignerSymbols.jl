@@ -1,13 +1,22 @@
 module QWignerSymbols
 
+# imports
+# --------
+using WignerSymbols
 using WignerSymbols: δ, reorder6j
 using HalfIntegers
-using TensorKit
+using LinearAlgebra
+using TensorKitSectors
 
+# exports
+# -------
 export q_number, q_factorial, q_binomial
 export q_wigner3j, q_clebschgordan, q_wigner6j, q_racahW
-export SU2qIrrep
+export SU2qIrrep, SU2kIrrep
 
+# includes
+# --------
+include("SU2k_sector.jl")
 
 # Q-numbers
 # ---------
@@ -116,9 +125,11 @@ function compute6jseries(β₁, β₂, β₃, α₁, α₂, α₃, α₄, q)
     return s
 end
 
-# TensorKit extension
+# TensorKitSectors extension
+# Rep(su(2)_q): q-deformed SU(2) irreps
 # -------------------
-struct SU2qIrrep{Q} <: TensorKit.Sector
+
+struct SU2qIrrep{Q} <: TensorKitSectors.Sector
     j::HalfInt
     function SU2qIrrep{Q}(j) where {Q}
         j >= zero(j) || error("Not a valid SU₂ irrep")
@@ -128,64 +139,67 @@ end
 
 SU2qIrrep(j, q::Number) = SU2qIrrep{q}(j)
 q(::Type{SU2qIrrep{Q}}) where {Q} = Q
+
+Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
+Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 Base.convert(T::Type{<:SU2qIrrep}, j::Real) = T(j)
 
-Base.one(::Type{T}) where {T<:SU2qIrrep} = T(zero(HalfInt))
-Base.conj(s::SU2qIrrep) = s
-function TensorKit.:⊗(s1::T, s2::T) where {T<:SU2qIrrep}
-    return TensorKit.SectorSet{T}(abs(s1.j - s2.j):(s1.j + s2.j))
+TensorKitSectors.unit(::Type{T}) where {T<:SU2qIrrep} = T(zero(HalfInt))
+TensorKitSectors.dual(s::SU2qIrrep) = s
+
+function TensorKitSectors.:⊗(s1::T, s2::T) where {T<:SU2qIrrep}
+    return TensorKitSectors.SectorSet{T}(abs(s1.j - s2.j):(s1.j + s2.j))
 end
-Base.IteratorSize(::Type{<:TensorKit.SectorValues{<:SU2qIrrep}}) = Base.IsInfinite()
-function Base.iterate(::TensorKit.SectorValues{SU2qIrrep{Q}}, i=0) where {Q}
+
+Base.IteratorSize(::Type{<:TensorKitSectors.SectorValues{<:SU2qIrrep}}) = Base.IsInfinite()
+function Base.iterate(::TensorKitSectors.SectorValues{SU2qIrrep{Q}}, i=0) where {Q}
     return (SU2qIrrep{Q}(half(i)), i + 1)
 end
 
-TensorKit.FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
-TensorKit.BraidingStyle(::Type{<:SU2qIrrep}) = TensorKit.Anyonic()
+TensorKitSectors.FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
+# sectorscalartype?
+TensorKitSectors.BraidingStyle(::Type{<:SU2qIrrep}) = TensorKitSectors.Anyonic()
 Base.isreal(::Type{<:SU2qIrrep{Q}}) where {Q} = isreal(Q)
-function TensorKit.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2qIrrep}
+function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2qIrrep}
     return δ(sa.j, sb.j, sc.j)
 end
 
-function TensorKit.Fsymbol(s1::T, s2::T, s3::T,
+function TensorKitSectors.Fsymbol(s1::T, s2::T, s3::T,
                            s4::T, s5::T, s6::T) where {T<:SU2qIrrep}
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(T))
 end
 
-function TensorKit.Rsymbol(a::T, b::T, c::T) where {T<:SU2qIrrep}
+function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T<:SU2qIrrep}
     Nsymbol(a, b, c) || return 0.0
     factor = q(T)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
-TensorKit.dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
+TensorKitSectors.dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
 
-function TensorKit.fusiontensor(a::T, b::T, c::T) where {T<:SU2qIrrep}
-    da = twice(a.j) + 1
-    db = twice(b.j) + 1
-    dc = twice(c.j) + 1
-    C = Array{Float64}(undef, da, db, dc, 1)
-    ja, jb, jc = a.j, b.j, c.j
+# function TensorKitSectors.fusiontensor(a::T, b::T, c::T) where {T<:SU2qIrrep}
+#     da = twice(a.j) + 1
+#     db = twice(b.j) + 1
+#     dc = twice(c.j) + 1
+#     C = Array{Float64}(undef, da, db, dc, 1)
+#     ja, jb, jc = a.j, b.j, c.j
 
-    for kc in 1:dc, kb in 1:db, ka in 1:da
-        C[ka, kb, kc, 1] = q_clebschgordan(ja, ja + 1 - ka, jb, jb + 1 - kb, jc,
-                                           jc + 1 - kc, q(T))
-    end
+#     for kc in 1:dc, kb in 1:db, ka in 1:da
+#         C[ka, kb, kc, 1] = q_clebschgordan(ja, ja + 1 - ka, jb, jb + 1 - kb, jc,
+#                                            jc + 1 - kc, q(T))
+#     end
 
-    return C
-end
-
-Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
-Base.isless(s1::T, s2::T) where {T<:SU2qIrrep} = isless(s1.j, s2.j)
+#     return C
+# end
 
 # additional specialisations because dim does not return Int
-function Base.axes(V::GradedSpace{I}, c::I) where {I<:SU2qIrrep}
-    offset = 0
-    for c′ in sectors(V)
-        c′ == c && break
-        offset += (twice(c′.j) + 1) * dim(V, c′)
-    end
-    return (offset + 1):(offset + (twice(c.j) + 1) * dim(V, c))
-end
+# function Base.axes(V::GradedSpace{I}, c::I) where {I<:SU2qIrrep}
+#     offset = 0
+#     for c′ in sectors(V)
+#         c′ == c && break
+#         offset += (twice(c′.j) + 1) * dim(V, c′)
+#     end
+#     return (offset + 1):(offset + (twice(c.j) + 1) * dim(V, c))
+# end
 
 end
