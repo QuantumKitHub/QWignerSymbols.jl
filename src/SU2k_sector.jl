@@ -16,14 +16,14 @@ Notes
 struct SU2kIrrep{k} <: TensorKitSectors.Sector
     j::HalfInt
     function SU2kIrrep{k}(j) where {k}
-        j >= zero(j) || error("j=$j is not a positive half-integer")
-        j <= half(k) || error("j=$j can be at most k/2=$(half(k))")
+        j >= zero(j) || throw(DomainError(j, "j is not a positive half-integer"))
+        j <= half(k) || throw(DomainError(j, lazy"j can be at most k/2= $(half(k))"))
         return new{k}(j)
     end
 end
 
 function SU2kIrrep(j, k::Int)
-    k >= 1 || error("Level k must be positve")
+    k >= 1 || throw(DomainError(k, "Level k must be positive"))
     return SU2kIrrep{k}(j)
 end
 

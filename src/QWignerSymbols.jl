@@ -24,7 +24,7 @@ function q_number(n::Integer, q::Number)
     if isa(q, Real)
         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
     elseif isa(q, ComplexF64)
-        norm(q) ≈ 1.0 || error("q must be either real or a U₁ phase")
+        norm(q) ≈ 1.0 || throw(DomainError(norm(q), "q must be either real or a U₁ phase"))
         return real(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
     end
 end
@@ -132,7 +132,7 @@ end
 struct SU2qIrrep{Q} <: TensorKitSectors.Sector
     j::HalfInt
     function SU2qIrrep{Q}(j) where {Q}
-        j >= zero(j) || error("Not a valid SU₂ irrep")
+        j >= zero(j) || throw(DomainError(j, "Not a valid SU₂ irrep"))
         return new{Q}(j)
     end
 end
