@@ -20,7 +20,7 @@ include("SU2k_sector.jl")
 
 # Q-numbers
 # ---------
-function q_number(n::Integer, q::Number) 
+function q_number(n::Integer, q::Number)
     if isa(q, Real)
         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
     elseif isa(q, ComplexF64)
@@ -30,7 +30,7 @@ function q_number(n::Integer, q::Number)
 end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
 
-q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init=1.0)
+q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init = 1.0)
 q_factorial(n::Number, q::Number) = q_factorial(Int(n), q)
 
 function q_binomial(n::Integer, m::Integer, q::Number)
@@ -44,17 +44,33 @@ function q_wigner3j(j₁, j₂, j₃, m₁, m₂, m₃, q::Number)
         return 0.0
     end
     factor = q^(((j₁ + j₂ - j₃) * (j₁ + j₂ + j₃ + 1) + 2 * (j₁ * m₂ - j₂ * m₁)) / 4) *
-             Δ(j₁, j₂, j₃, q) *
-             *(sqrt.((q_factorial.((j₁ - m₁, j₁ + m₁, j₂ - m₂, j₂ + m₂, j₃ - m₃, j₃ + m₃),
-                                   q)))...)
+        Δ(j₁, j₂, j₃, q) *
+        *(
+        sqrt.(
+            (
+                q_factorial.(
+                    (j₁ - m₁, j₁ + m₁, j₂ - m₂, j₂ + m₂, j₃ - m₃, j₃ + m₃), q
+                )
+            )
+        )...
+    )
     iszero(factor) && return factor
     term = zero(factor)
     for n in
-        ceil(max(0, -(j₃ - j₂ + m₁), -(j₃ - j₁ - m₂))):floor(min(j₁ + j₂ - j₃, j₁ - m₁,
-                                                                 j₂ + m₂))
+        ceil(max(0, -(j₃ - j₂ + m₁), -(j₃ - j₁ - m₂))):floor(
+            min(
+                j₁ + j₂ - j₃, j₁ - m₁, j₂ + m₂
+            )
+        )
         term += (-1)^n * q^(-n * (j₁ + j₂ + j₃ + 1) / 2) /
-                *(q_factorial.((n, j₁ - m₁ - n, j₂ + m₂ - n, j₁ + j₂ - j₃ - n,
-                                j₃ - j₂ + m₁ + n, j₃ - j₁ - m₂ + n), q)...)
+            *(
+            q_factorial.(
+                (
+                    n, j₁ - m₁ - n, j₂ + m₂ - n, j₁ + j₂ - j₃ - n,
+                    j₃ - j₂ + m₁ + n, j₃ - j₁ - m₂ + n,
+                ), q
+            )...
+        )
     end
     result = factor * term
     return isodd(Int(j₁ - j₂ - m₃)) ? -result : result
@@ -67,8 +83,9 @@ function q_clebschgordan(j₁, m₁, j₂, m₂, j₃, m₃, q::Number)
     return isodd(Int(j₁ - j₂ + m₃)) ? -s : s
 end
 
-function q_wigner6j(j₁, j₂, j₃,
-                    j₄, j₅, j₆, q)
+function q_wigner6j(
+        j₁, j₂, j₃, j₄, j₅, j₆, q
+    )
     α̂₁ = (j₁, j₂, j₃)
     α̂₂ = (j₁, j₆, j₅)
     α̂₃ = (j₂, j₄, j₆)
@@ -109,7 +126,7 @@ function Δ(j₁, j₂, j₃, q)
     end
 
     return *(sqrt.(q_factorial.((j₁ + j₂ - j₃, j₁ - j₂ + j₃, -j₁ + j₂ + j₃), q))...) /
-           sqrt(q_factorial(j₁ + j₂ + j₃ + 1, q))
+        sqrt(q_factorial(j₁ + j₂ + j₃ + 1, q))
 end
 
 function compute6jseries(β₁, β₂, β₃, α₁, α₂, α₃, α₄, q)
@@ -118,8 +135,11 @@ function compute6jseries(β₁, β₂, β₃, α₁, α₂, α₃, α₄, q)
     s = 0.0
     for n in max(α₁, α₂, α₃, α₄):min(β₁, β₂, β₃)
         num = iseven(n) ? q_factorial(n + 1, q) : -q_factorial(n + 1, q)
-        den = *(q_factorial.((n - α₁, n - α₂, n - α₃, n - α₄, β₁ - n, β₂ - n, β₃ - n),
-                             q)...)
+        den = *(
+            q_factorial.(
+                (n - α₁, n - α₂, n - α₃, n - α₄, β₁ - n, β₂ - n, β₃ - n), q
+            )...
+        )
         s += num / den
     end
     return s
@@ -144,15 +164,15 @@ Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 Base.convert(T::Type{<:SU2qIrrep}, j::Real) = T(j)
 
-TensorKitSectors.unit(::Type{T}) where {T<:SU2qIrrep} = T(zero(HalfInt))
+TensorKitSectors.unit(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 TensorKitSectors.dual(s::SU2qIrrep) = s
 
-function TensorKitSectors.:⊗(s1::T, s2::T) where {T<:SU2qIrrep}
+function TensorKitSectors.:⊗(s1::T, s2::T) where {T <: SU2qIrrep}
     return TensorKitSectors.SectorSet{T}(abs(s1.j - s2.j):(s1.j + s2.j))
 end
 
 Base.IteratorSize(::Type{<:TensorKitSectors.SectorValues{<:SU2qIrrep}}) = Base.IsInfinite()
-function Base.iterate(::TensorKitSectors.SectorValues{SU2qIrrep{Q}}, i=0) where {Q}
+function Base.iterate(::TensorKitSectors.SectorValues{SU2qIrrep{Q}}, i = 0) where {Q}
     return (SU2qIrrep{Q}(half(i)), i + 1)
 end
 
@@ -160,16 +180,17 @@ TensorKitSectors.FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
 # sectorscalartype?
 TensorKitSectors.BraidingStyle(::Type{<:SU2qIrrep}) = TensorKitSectors.Anyonic()
 Base.isreal(::Type{<:SU2qIrrep{Q}}) where {Q} = isreal(Q)
-function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2qIrrep}
+function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2qIrrep}
     return δ(sa.j, sb.j, sc.j)
 end
 
-function TensorKitSectors.Fsymbol(s1::T, s2::T, s3::T,
-                           s4::T, s5::T, s6::T) where {T<:SU2qIrrep}
+function TensorKitSectors.Fsymbol(
+        s1::T, s2::T, s3::T, s4::T, s5::T, s6::T
+    ) where {T <: SU2qIrrep}
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(T))
 end
 
-function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T<:SU2qIrrep}
+function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T <: SU2qIrrep}
     Nsymbol(a, b, c) || return 0.0
     factor = q(T)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor

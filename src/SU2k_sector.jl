@@ -28,7 +28,7 @@ function SU2kIrrep(j, ::Val{k}) where {k}
 end
 
 k(::SU2kIrrep{K}) where {K} = K # TODO: give better name?
-q(s::SU2kIrrep{K}) where {K} = exp(2*π*im/(k(s)+2)) # TODO: give better name? this is actually q^2
+q(s::SU2kIrrep{K}) where {K} = exp(2 * π * im / (k(s) + 2)) # TODO: give better name? this is actually q^2
 
 Base.hash(s::SU2kIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2kIrrep} = isless(s1.j, s2.j)
@@ -37,13 +37,13 @@ Base.convert(T::Type{<:SU2kIrrep}, j::Real) = T(j)
 TensorKitSectors.unit(::Type{T}) where {T <: SU2kIrrep} = T(zero(HalfInt))
 TensorKitSectors.dual(s::SU2kIrrep) = s
 
-function TensorKitSectors.:⊗(s1::T, s2::T) where {T<:SU2kIrrep}
+function TensorKitSectors.:⊗(s1::T, s2::T) where {T <: SU2kIrrep}
     return TensorKitSectors.SectorSet{T}(abs(s1.j - s2.j):min(s1.j + s2.j, k(s1) - s1.j - s2.j))
 end
 
 Base.IteratorSize(::Type{<:TensorKitSectors.SectorValues{<:SU2kIrrep}}) = Base.HasLength()
 Base.length(::TensorKitSectors.SectorValues{SU2kIrrep{k}}) where {k} = k + 1
-function Base.iterate(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i=0) where {k}
+function Base.iterate(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i = 0) where {k}
     if i >= k + 1
         return nothing
     end
@@ -54,7 +54,7 @@ function Base.getindex(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i::Int) wh
     if i <= k + 1
         return SU2kIrrep(half(i - 1), Val(k))
     else
-        throw(BoundsError(k,i))
+        throw(BoundsError(k, i))
     end
 end
 findindex(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, s::SU2kIrrep{k}) where {k} = twice(s.j) + 1
@@ -64,22 +64,23 @@ TensorKitSectors.sectorscalartype(::Type{<:SU2kIrrep}) = ComplexF64
 TensorKitSectors.BraidingStyle(::Type{<:SU2kIrrep}) = TensorKitSectors.Anyonic()
 
 function WignerSymbols.δ(j₁, j₂, j₃, k)
-    return (j₃ <= j₁ + j₂) && (j₁ <= j₂ + j₃) && (j₂ <= j₃ + j₁) && (j₁ + j₂ + j₃ <= k) && isinteger(j₁+j₂+j₃)
+    return (j₃ <= j₁ + j₂) && (j₁ <= j₂ + j₃) && (j₂ <= j₃ + j₁) && (j₁ + j₂ + j₃ <= k) && isinteger(j₁ + j₂ + j₃)
 end
 
 TensorKitSectors.dim(s::SU2kIrrep) = Float64(q_number(twice(s.j) + 1, q(s)))
 
-function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2kIrrep}
+function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2kIrrep}
     return δ(sa.j, sb.j, sc.j, k(sa))
 end
 
-function TensorKitSectors.Fsymbol(s1::T, s2::T, s3::T,
-    s4::T, s5::T, s6::T) where {T<:SU2kIrrep}
-    Nsymbol(s1,s2,s5) && Nsymbol(s5,s3,s4) && Nsymbol(s2,s3,s6) && Nsymbol(s1,s6,s4) || return 0.0
+function TensorKitSectors.Fsymbol(
+        s1::T, s2::T, s3::T, s4::T, s5::T, s6::T
+    ) where {T <: SU2kIrrep}
+    Nsymbol(s1, s2, s5) && Nsymbol(s5, s3, s4) && Nsymbol(s2, s3, s6) && Nsymbol(s1, s6, s4) || return 0.0
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(s1))
 end
 
-function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T<:SU2kIrrep}
+function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T <: SU2kIrrep}
     Nsymbol(a, b, c) || return zero(TensorKitSectors.sectorscalartype(T))
     factor = q(a)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
