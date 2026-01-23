@@ -1,7 +1,7 @@
 name = "QWignerSymbols"
 uuid = "a6ec71dc-95d1-4ca4-9dd3-50060f27aa2b"
 authors = ["lkdvos <lukas.devos@ugent.be>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
