@@ -22,7 +22,7 @@ struct SU2kIrrep{k} <: TensorKitSectors.Sector
     end
 end
 
-function SU2kIrrep(j, k::Int)
+function SU2kIrrep(j, ::Val{k}) where {k}
     k >= 1 || throw(DomainError(k, "Level k must be positive"))
     return SU2kIrrep{k}(j)
 end
@@ -52,7 +52,7 @@ end
 
 function Base.getindex(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i::Int) where {k}
     if i <= k + 1
-        return SU2kIrrep(half(i - 1), k)
+        return SU2kIrrep(half(i - 1), Val(k))
     else
         throw(BoundsError(k,i))
     end
