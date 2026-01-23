@@ -6,7 +6,7 @@ Random.seed!(123456789)
 
 smallset(::Type{I}) where {I<:Sector} = take(values(I), length(values(I)))
 
-@testset "Unitarity SU2k F symbols" for level=2:7 begin
+@testset "Unitarity SU2_$level F symbols" for level=2:7 begin
     I = SU2kIrrep{level}
         for a in smallset(I), b in smallset(I), c in smallset(I)
             for d in ⊗(a, b, c)
@@ -20,18 +20,18 @@ smallset(::Type{I}) where {I<:Sector} = take(values(I), length(values(I)))
     end
 end
 
-@testset "SU2k pentagons" for level=2:7 begin
+@testset "SU2_$level pentagons" for level=2:7 begin
         I = SU2kIrrep{level}
         for a in smallset(I), b in smallset(I), c in smallset(I), d in smallset(I)
-            @test TensorKit.pentagon_equation(a, b, c, d; atol=1e-12, rtol=1e-12)
+            @test TensorKitSectors.pentagon_equation(a, b, c, d; atol=1e-12, rtol=1e-12)
         end
     end
 end
 
-@testset "SU2k Frobenius Schur" for level=2:12 begin
+@testset "SU2_$level Frobenius Schur" for level=2:12 begin
         I = SU2kIrrep{level}
         for (s, a) in enumerate(smallset(I))
-            @test TensorKit.frobeniusschur(a) == (-1)^twice(a.j)
+            @test TensorKitSectors.frobenius_schur_phase(a) == (-1)^twice(a.j)
         end
     end
 end
