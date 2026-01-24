@@ -41,7 +41,7 @@ end
         if Base.IteratorSize(values(I)) == Base.IsInfinite() && I <: ProductSector
             @test_throws ArgumentError values(I)[i]
             @test_throws ArgumentError TensorKit.findindex(values(I), s)
-        elseif hasmethod(Base.getindex, Tuple{typeof(values(I)),Int})
+        elseif hasmethod(Base.getindex, Tuple{typeof(values(I)), Int})
             @test s == @constinferred (values(I)[i])
             @test TensorKit.findindex(values(I), s) == i
         end
@@ -51,7 +51,7 @@ end
     @test one(I) == first(values(I))
     if Base.IteratorSize(values(I)) == Base.IsInfinite() && I <: ProductSector
         @test_throws ArgumentError TensorKit.findindex(values(I), one(I))
-    elseif hasmethod(Base.getindex, Tuple{typeof(values(I)),Int})
+    elseif hasmethod(Base.getindex, Tuple{typeof(values(I)), Int})
         @test (@constinferred TensorKit.findindex(values(I), one(I))) == 1
         for s in smallset(I)
             @test (@constinferred values(I)[TensorKit.findindex(values(I), s)]) == s
@@ -107,15 +107,15 @@ end
                 for e in es
                     for f in fs
                         Fs = Fsymbol(a, b, c, d, e, f)
-                        push!(Fblocks,
-                              reshape(Fs,
-                                      (size(Fs, 1) * size(Fs, 2),
-                                       size(Fs, 3) * size(Fs, 4))))
+                        push!(
+                            Fblocks,
+                            reshape(Fs, (size(Fs, 1) * size(Fs, 2), size(Fs, 3) * size(Fs, 4)))
+                        )
                     end
                 end
                 F = hvcat(length(fs), Fblocks...)
             end
-            @test isapprox(F' * F, one(F); atol=1e-12, rtol=1e-12)
+            @test isapprox(F' * F, one(F); atol = 1.0e-12, rtol = 1.0e-12)
         end
     end
 end
@@ -129,27 +129,22 @@ end
                         p2 = zero(p1)
                         for j in ⊗(b, c)
                             p2 += Fsymbol(a, b, c, g, f, j) *
-                                  Fsymbol(a, j, d, e, g, i) *
-                                  Fsymbol(b, c, d, i, j, h)
+                                Fsymbol(a, j, d, e, g, i) *
+                                Fsymbol(b, c, d, i, j, h)
                         end
-                        @test isapprox(p1, p2; atol=1e-12, rtol=1e-12)
+                        @test isapprox(p1, p2; atol = 1.0e-12, rtol = 1.0e-12)
                     else
-                        @tensor p1[λ, μ, ν, κ, ρ, σ] := Fsymbol(f, c, d, e, g, h)[λ, μ, ν,
-                                                                                  τ] *
-                                                        Fsymbol(a, b, h, e, f, i)[κ, τ, ρ,
-                                                                                  σ]
+                        @tensor p1[λ, μ, ν, κ, ρ, σ] :=
+                            Fsymbol(f, c, d, e, g, h)[λ, μ, ν, τ] *
+                            Fsymbol(a, b, h, e, f, i)[κ, τ, ρ, σ]
                         p2 = zero(p1)
                         for j in ⊗(b, c)
-                            @tensor p2[λ, μ, ν, κ, ρ, σ] += Fsymbol(a, b, c, g, f, j)[κ, λ,
-                                                                                      α,
-                                                                                      β] *
-                                                            Fsymbol(a, j, d, e, g, i)[β, μ,
-                                                                                      τ,
-                                                                                      σ] *
-                                                            Fsymbol(b, c, d, i, j, h)[α, τ,
-                                                                                      ν, ρ]
+                            @tensor p2[λ, μ, ν, κ, ρ, σ] +=
+                                Fsymbol(a, b, c, g, f, j)[κ, λ, α, β] *
+                                Fsymbol(a, j, d, e, g, i)[β, μ, τ, σ] *
+                                Fsymbol(b, c, d, i, j, h)[α, τ, ν, ρ]
                         end
-                        @test isapprox(p1, p2; atol=1e-12, rtol=1e-12)
+                        @test isapprox(p1, p2; atol = 1.0e-12, rtol = 1.0e-12)
                     end
                 end
             end
@@ -165,20 +160,21 @@ end
                     p2 = zero(p1)
                     for f in ⊗(a, b)
                         p2 += Fsymbol(c, a, b, d, e, f) * Rsymbol(c, f, d) *
-                              Fsymbol(a, b, c, d, f, g)
+                            Fsymbol(a, b, c, d, f, g)
                     end
-                    @test isapprox(p1, p2; atol=1e-12, rtol=1e-12)
+                    @test isapprox(p1, p2; atol = 1.0e-12, rtol = 1.0e-12)
                 else
                     @tensor p1[α, β, μ, ν] := Rsymbol(c, a, e)[α, λ] *
-                                              Fsymbol(a, c, b, d, e, g)[λ, β, γ, ν] *
-                                              Rsymbol(b, c, g)[γ, μ]
+                        Fsymbol(a, c, b, d, e, g)[λ, β, γ, ν] *
+                        Rsymbol(b, c, g)[γ, μ]
                     p2 = zero(p1)
                     for f in ⊗(a, b)
-                        @tensor p2[α, β, μ, ν] += Fsymbol(c, a, b, d, e, f)[α, β, δ, σ] *
-                                                  Rsymbol(c, f, d)[σ, ψ] *
-                                                  Fsymbol(a, b, c, d, f, g)[δ, ψ, μ, ν]
+                        @tensor p2[α, β, μ, ν] +=
+                            Fsymbol(c, a, b, d, e, f)[α, β, δ, σ] *
+                            Rsymbol(c, f, d)[σ, ψ] *
+                            Fsymbol(a, b, c, d, f, g)[δ, ψ, μ, ν]
                     end
-                    @test isapprox(p1, p2; atol=1e-12, rtol=1e-12)
+                    @test isapprox(p1, p2; atol = 1.0e-12, rtol = 1.0e-12)
                 end
             end
         end

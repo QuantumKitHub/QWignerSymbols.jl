@@ -13,7 +13,7 @@ export SU2qIrrep
 q_number(n::Integer, q::Number) = Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
 q_number(n::Number, q::Number) = q_number(Int(n), q)
 
-q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init=1.0)
+q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init = 1.0)
 q_factorial(n::Number, q::Number) = q_factorial(Int(n), q)
 
 function q_binomial(n::Integer, m::Integer, q::Number)
@@ -27,17 +27,15 @@ function q_wigner3j(j₁, j₂, j₃, m₁, m₂, m₃, q::Number)
         return 0.0
     end
     factor = q^(((j₁ + j₂ - j₃) * (j₁ + j₂ + j₃ + 1) + 2 * (j₁ * m₂ - j₂ * m₁)) / 4) *
-             Δ(j₁, j₂, j₃, q) *
-             *(sqrt.((q_factorial.((j₁ - m₁, j₁ + m₁, j₂ - m₂, j₂ + m₂, j₃ - m₃, j₃ + m₃),
-                                   q)))...)
+        Δ(j₁, j₂, j₃, q) *
+        *(sqrt.((q_factorial.((j₁ - m₁, j₁ + m₁, j₂ - m₂, j₂ + m₂, j₃ - m₃, j₃ + m₃), q)))...)
     iszero(factor) && return factor
+
     term = zero(factor)
-    for n in
-        ceil(max(0, -(j₃ - j₂ + m₁), -(j₃ - j₁ - m₂))):floor(min(j₁ + j₂ - j₃, j₁ - m₁,
-                                                                 j₂ + m₂))
+    nrange = ceil(max(0, -(j₃ - j₂ + m₁), -(j₃ - j₁ - m₂))):floor(min(j₁ + j₂ - j₃, j₁ - m₁, j₂ + m₂))
+    for n in nrange
         term += (-1)^n * q^(-n * (j₁ + j₂ + j₃ + 1) / 2) /
-                *(q_factorial.((n, j₁ - m₁ - n, j₂ + m₂ - n, j₁ + j₂ - j₃ - n,
-                                j₃ - j₂ + m₁ + n, j₃ - j₁ - m₂ + n), q)...)
+            *(q_factorial.((n, j₁ - m₁ - n, j₂ + m₂ - n, j₁ + j₂ - j₃ - n, j₃ - j₂ + m₁ + n, j₃ - j₁ - m₂ + n), q)...)
     end
     result = factor * term
     return isodd(Int(j₁ - j₂ - m₃)) ? -result : result
@@ -50,17 +48,18 @@ function q_clebschgordan(j₁, m₁, j₂, m₂, j₃, m₃, q::Number)
     return isodd(Int(j₁ - j₂ + m₃)) ? -s : s
 end
 
-function q_wigner6j(j₁, j₂, j₃,
-                    j₄, j₅, j₆, q)
+function q_wigner6j(
+        j₁, j₂, j₃,
+        j₄, j₅, j₆, q
+    )
     α̂₁ = (j₁, j₂, j₃)
     α̂₂ = (j₁, j₆, j₅)
     α̂₃ = (j₂, j₄, j₆)
     α̂₄ = (j₃, j₄, j₅)
 
     # check triangle conditions
-    if !(δ(α̂₁...) && δ(α̂₂...) && δ(α̂₃...) && δ(α̂₄...))
-        return 0.0
-    end
+    (δ(α̂₁...) && δ(α̂₂...) && δ(α̂₃...) && δ(α̂₄...)) || return 0.0
+
     # reduce
     α₁ = convert(UInt, +(α̂₁...))
     α₂ = convert(UInt, +(α̂₂...))
@@ -87,22 +86,18 @@ function q_racahW(j₁, j₂, J, j₃, J₁₂, J₂₃, q::Number)
 end
 
 function Δ(j₁, j₂, j₃, q)
-    if !δ(j₁, j₂, j₃)
-        return 0.0
-    end
+    δ(j₁, j₂, j₃) || return 0.0
 
     return *(sqrt.(q_factorial.((j₁ + j₂ - j₃, j₁ - j₂ + j₃, -j₁ + j₂ + j₃), q))...) /
-           sqrt(q_factorial(j₁ + j₂ + j₃ + 1, q))
+        sqrt(q_factorial(j₁ + j₂ + j₃ + 1, q))
 end
 
 function compute6jseries(β₁, β₂, β₃, α₁, α₂, α₃, α₄, q)
-    krange = max(α₁, α₂, α₃, α₄):min(β₁, β₂, β₃)
-
     s = 0.0
-    for n in max(α₁, α₂, α₃, α₄):min(β₁, β₂, β₃)
+    krange = max(α₁, α₂, α₃, α₄):min(β₁, β₂, β₃)
+    for n in krange
         num = iseven(n) ? q_factorial(n + 1, q) : -q_factorial(n + 1, q)
-        den = *(q_factorial.((n - α₁, n - α₂, n - α₃, n - α₄, β₁ - n, β₂ - n, β₃ - n),
-                             q)...)
+        den = *(q_factorial.((n - α₁, n - α₂, n - α₃, n - α₄, β₁ - n, β₂ - n, β₃ - n), q)...)
         s += num / den
     end
     return s
@@ -122,29 +117,31 @@ SU2qIrrep(j, q::Number) = SU2qIrrep{q}(j)
 q(::Type{SU2qIrrep{Q}}) where {Q} = Q
 Base.convert(T::Type{<:SU2qIrrep}, j::Real) = T(j)
 
-Base.one(::Type{T}) where {T<:SU2qIrrep} = T(zero(HalfInt))
+Base.one(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 Base.conj(s::SU2qIrrep) = s
-function TensorKit.:⊗(s1::T, s2::T) where {T<:SU2qIrrep}
+function TensorKit.:⊗(s1::T, s2::T) where {T <: SU2qIrrep}
     return TensorKit.SectorSet{T}(abs(s1.j - s2.j):(s1.j + s2.j))
 end
 Base.IteratorSize(::Type{<:TensorKit.SectorValues{<:SU2qIrrep}}) = Base.IsInfinite()
-function Base.iterate(::TensorKit.SectorValues{SU2qIrrep{Q}}, i=0) where {Q}
+function Base.iterate(::TensorKit.SectorValues{SU2qIrrep{Q}}, i = 0) where {Q}
     return (SU2qIrrep{Q}(half(i)), i + 1)
 end
 
 TensorKit.FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
 TensorKit.BraidingStyle(::Type{<:SU2qIrrep}) = TensorKit.Anyonic()
 Base.isreal(::Type{<:SU2qIrrep{Q}}) where {Q} = isreal(Q)
-function TensorKit.Nsymbol(sa::T, sb::T, sc::T) where {T<:SU2qIrrep}
+function TensorKit.Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2qIrrep}
     return δ(sa.j, sb.j, sc.j)
 end
 
-function TensorKit.Fsymbol(s1::T, s2::T, s3::T,
-                           s4::T, s5::T, s6::T) where {T<:SU2qIrrep}
+function TensorKit.Fsymbol(
+        s1::T, s2::T, s3::T,
+        s4::T, s5::T, s6::T
+    ) where {T <: SU2qIrrep}
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(T))
 end
 
-function TensorKit.Rsymbol(a::T, b::T, c::T) where {T<:SU2qIrrep}
+function TensorKit.Rsymbol(a::T, b::T, c::T) where {T <: SU2qIrrep}
     Nsymbol(a, b, c) || return 0.0
     factor = q(T)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
@@ -152,7 +149,7 @@ end
 
 TensorKit.dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
 
-function TensorKit.fusiontensor(a::T, b::T, c::T) where {T<:SU2qIrrep}
+function TensorKit.fusiontensor(a::T, b::T, c::T) where {T <: SU2qIrrep}
     da = twice(a.j) + 1
     db = twice(b.j) + 1
     dc = twice(c.j) + 1
@@ -160,18 +157,19 @@ function TensorKit.fusiontensor(a::T, b::T, c::T) where {T<:SU2qIrrep}
     ja, jb, jc = a.j, b.j, c.j
 
     for kc in 1:dc, kb in 1:db, ka in 1:da
-        C[ka, kb, kc, 1] = q_clebschgordan(ja, ja + 1 - ka, jb, jb + 1 - kb, jc,
-                                           jc + 1 - kc, q(T))
+        C[ka, kb, kc, 1] = q_clebschgordan(
+            ja, ja + 1 - ka, jb, jb + 1 - kb, jc, jc + 1 - kc, q(T)
+        )
     end
 
     return C
 end
 
 Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
-Base.isless(s1::T, s2::T) where {T<:SU2qIrrep} = isless(s1.j, s2.j)
+Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 
 # additional specialisations because dim does not return Int
-function Base.axes(V::GradedSpace{I}, c::I) where {I<:SU2qIrrep}
+function Base.axes(V::GradedSpace{I}, c::I) where {I <: SU2qIrrep}
     offset = 0
     for c′ in sectors(V)
         c′ == c && break
