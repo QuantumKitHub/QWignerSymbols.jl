@@ -163,31 +163,31 @@ function Rsymbol(a::I, b::I, c::I) where {I <: SU2qIrrep}
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
-
-function fusiontensor(a::I, b::I, c::I) where {I <: SU2qIrrep}
-    da = twice(a.j) + 1
-    db = twice(b.j) + 1
-    dc = twice(c.j) + 1
-    C = Array{sectorscalartype(I)}(undef, da, db, dc, 1)
-    ja, jb, jc = a.j, b.j, c.j
-
-    for kc in 1:dc, kb in 1:db, ka in 1:da
-        C[ka, kb, kc, 1] = q_clebschgordan(
-            ja, ja + 1 - ka, jb, jb + 1 - kb, jc, jc + 1 - kc, q(I)
-        )
-    end
-
-    return C
-end
+# TODO: this seems to not be compatible with testsuite
+# function fusiontensor(a::I, b::I, c::I) where {I <: SU2qIrrep}
+#     da = twice(a.j) + 1
+#     db = twice(b.j) + 1
+#     dc = twice(c.j) + 1
+#     C = Array{sectorscalartype(I)}(undef, da, db, dc, 1)
+#     ja, jb, jc = a.j, b.j, c.j
+#
+#     for kc in 1:dc, kb in 1:db, ka in 1:da
+#         C[ka, kb, kc, 1] = q_clebschgordan(
+#             ja, ja + 1 - ka, jb, jb + 1 - kb, jc, jc + 1 - kc, q(I)
+#         )
+#     end
+#
+#     return C
+# end
 
 # additional specialisations because dim does not return Int
-function Base.axes(V::GradedSpace{I}, c::I) where {I <: SU2qIrrep}
-    offset = 0
-    for c′ in sectors(V)
-        c′ == c && break
-        offset += (twice(c′.j) + 1) * dim(V, c′)
-    end
-    return (offset + 1):(offset + (twice(c.j) + 1) * dim(V, c))
-end
+# function Base.axes(V::GradedSpace{I}, c::I) where {I <: SU2qIrrep}
+#     offset = 0
+#     for c′ in sectors(V)
+#         c′ == c && break
+#         offset += (twice(c′.j) + 1) * dim(V, c′)
+#     end
+#     return (offset + 1):(offset + (twice(c.j) + 1) * dim(V, c))
+# end
 
 end
