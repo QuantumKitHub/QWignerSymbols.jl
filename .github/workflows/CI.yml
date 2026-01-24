@@ -2,77 +2,43 @@ name: CI
 on:
   push:
     branches:
-      - 'master'
       - 'main'
-      - 'release-'
-    tags: '*'
+    tags: ['*']
   pull_request:
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
+      actions: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # LTS version
-          - '1' # automatically expands to the latest stable 1.x release of Julia
+          - 'lts' # current lts release
+          - '1' # latest stable release
         os:
           - ubuntu-latest
           - macOS-latest
-          # - windows-latest # run on AppVeyor instead
-        arch:
-          - x64
-          - x86
-        exclude:
-          - os: macOS-latest
-            arch: x86
+          - windows-latest
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
-        env:
-          JULIA_NUM_THREADS: 4
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           file: lcov.info
-  test-nightly:
-    needs: test
-    name: Julia nightly - ${{ matrix.os }} - ${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - 'nightly'
-        os:
-          - ubuntu-latest
-          - macOS-latest
-          - windows-latest
-        arch:
-          - x64
-    steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
-        env:
-          JULIA_NUM_THREADS: 4
