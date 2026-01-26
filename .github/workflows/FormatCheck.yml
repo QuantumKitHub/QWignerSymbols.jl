@@ -11,5 +11,5 @@ permissions:
   pull-requests: write
 
 jobs:
-  runic:
+  formatcheck:
     uses: "QuantumKitHub/QuantumKitHubActions/.github/workflows/FormatCheck.yml@main"

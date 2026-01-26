@@ -14,10 +14,12 @@ smalljlist = 0:(1 // 2):5
     for j1 in smalljlist, j2 in smalljlist
         for j3 in abs(j1 - j2):min(5, (j1 + j2))
             for m1 in (-j1):j1, m2 in ((-j2):j2), m3 in (-j3):(j3)
-                if !isapprox(q_wigner3j(j1, j2, j3, m1, m2, m3, q),
-                             wigner3j(j1, j2, j3, m1, m2, m3); atol=1e-14)
+                if !isapprox(
+                        q_wigner3j(j1, j2, j3, m1, m2, m3, q),
+                        wigner3j(j1, j2, j3, m1, m2, m3); atol = 1.0e-14
+                    )
                     @test q_wigner3j(j1, j2, j3, m1, m2, m3, q) ≈
-                          wigner3j(j1, j2, j3, m1, m2, m3) atol = 1e-14
+                        wigner3j(j1, j2, j3, m1, m2, m3) atol = 1.0e-14
                     @show j1, j2, j3, m1, m2, m3
                 end
             end
@@ -25,9 +27,9 @@ smalljlist = 0:(1 // 2):5
     end
 
     for j1 in smalljlist, j2 in smalljlist, j3 in smalljlist, j4 in smalljlist,
-        j5 in smalljlist, j6 in smalljlist
+            j5 in smalljlist, j6 in smalljlist
 
-        @test q_wigner6j(j1, j2, j3, j4, j5, j6, q) ≈ wigner6j(j1, j2, j3, j4, j5, j6) atol = 1e-14
+        @test q_wigner6j(j1, j2, j3, j4, j5, j6, q) ≈ wigner6j(j1, j2, j3, j4, j5, j6) atol = 1.0e-14
     end
 end
 
@@ -62,7 +64,7 @@ end
             @inbounds for j3 in abs(j1 - j2):(j1 + j2), m3 in (-j3):j3
                 d3::Int = 2 * j3 + 1
                 M[ind1, ind2] += sqrt(q_number(d3, q)) *
-                                 q_wigner3j(j1, j2, j3, m1, m2, m3, q)
+                    q_wigner3j(j1, j2, j3, m1, m2, m3, q)
                 ind1 += 1
             end
             ind2 += 1
