@@ -1,23 +1,27 @@
 name = "QWignerSymbols"
 uuid = "a6ec71dc-95d1-4ca4-9dd3-50060f27aa2b"
+version = "0.2.0"
 authors = ["Lukas Devos <ldevos98@gmail.com>"]
-version = "0.1.0"
 
 [deps]
 HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
-TensorKit = "07d1fe3e-3e46-537d-9eac-e9e13d0d4cec"
+TensorKitSectors = "13a9c161-d5da-41f0-bcbd-e1a08ae0647f"
 WignerSymbols = "9f57e263-0b3d-5e2e-b1be-24f2bb48858b"
 
 [compat]
-julia = "1.10"
 HalfIntegers = "1"
-TensorKit = "0.11, 0.12"
+Random = "1"
+TensorKitSectors = "0.3.4"
+TensorOperations = "5"
 WignerSymbols = "2"
+julia = "1.10"
 
 [extras]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 
 [targets]
-test = ["Test", "TestExtras", "LinearAlgebra"]
+test = ["Test", "TestExtras", "LinearAlgebra", "Random", "TensorOperations"]
