@@ -10,10 +10,10 @@ Fields
 
 Notes
 - The allowed irreps for a given level `k` are j = 0, 1/2, 1, 3/2, ..., k/2.
-- This type implements the `TensorKitSectors.Sector` API so it can be used as a sector in TensorKit tensors.
+- This type implements the `Sector` API so it can be used as a sector in TensorKit tensors.
 - This is a special case of q-deformed SU(2) irreps with q^2 = exp(2πi/(k+2)) a root of unity.
 """
-struct SU2kIrrep{k} <: TensorKitSectors.Sector
+struct SU2kIrrep{k} <: Sector
     j::HalfInt
     function SU2kIrrep{k}(j) where {k}
         j >= zero(j) || throw(DomainError(j, "j is not a positive half-integer"))
@@ -34,61 +34,60 @@ Base.hash(s::SU2kIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2kIrrep} = isless(s1.j, s2.j)
 Base.convert(T::Type{<:SU2kIrrep}, j::Real) = T(j)
 
-TensorKitSectors.unit(::Type{T}) where {T <: SU2kIrrep} = T(zero(HalfInt))
-TensorKitSectors.dual(s::SU2kIrrep) = s
+unit(::Type{T}) where {T <: SU2kIrrep} = T(zero(HalfInt))
+dual(s::SU2kIrrep) = s
 
-function TensorKitSectors.:⊗(s1::T, s2::T) where {T <: SU2kIrrep}
-    return TensorKitSectors.SectorSet{T}(abs(s1.j - s2.j):min(s1.j + s2.j, k(s1) - s1.j - s2.j))
+function ⊗(s1::T, s2::T) where {T <: SU2kIrrep}
+    return SectorSet{T}(abs(s1.j - s2.j):min(s1.j + s2.j, k(s1) - s1.j - s2.j))
 end
 
-Base.IteratorSize(::Type{<:TensorKitSectors.SectorValues{<:SU2kIrrep}}) = Base.HasLength()
-Base.length(::TensorKitSectors.SectorValues{SU2kIrrep{k}}) where {k} = k + 1
-function Base.iterate(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i = 0) where {k}
+Base.IteratorSize(::Type{<:SectorValues{<:SU2kIrrep}}) = Base.HasLength()
+Base.length(::SectorValues{SU2kIrrep{k}}) where {k} = k + 1
+function Base.iterate(::SectorValues{SU2kIrrep{k}}, i = 0) where {k}
     if i >= k + 1
         return nothing
     end
     return (SU2kIrrep{k}(half(i)), i + 1)
 end
 
-function Base.getindex(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, i::Int) where {k}
+function Base.getindex(::SectorValues{SU2kIrrep{k}}, i::Int) where {k}
     if i <= k + 1
         return SU2kIrrep(half(i - 1), Val(k))
     else
         throw(BoundsError(k, i))
     end
 end
-findindex(::TensorKitSectors.SectorValues{SU2kIrrep{k}}, s::SU2kIrrep{k}) where {k} = twice(s.j) + 1
+findindex(::SectorValues{SU2kIrrep{k}}, s::SU2kIrrep{k}) where {k} = twice(s.j) + 1
 
-TensorKitSectors.FusionStyle(::Type{<:SU2kIrrep}) = SimpleFusion()
-TensorKitSectors.sectorscalartype(::Type{<:SU2kIrrep}) = ComplexF64
-TensorKitSectors.BraidingStyle(::Type{<:SU2kIrrep}) = TensorKitSectors.Anyonic()
-
+FusionStyle(::Type{<:SU2kIrrep}) = SimpleFusion()
+sectorscalartype(::Type{<:SU2kIrrep}) = ComplexF64
+BraidingStyle(::Type{<:SU2kIrrep}) = Anyonic()
 function WignerSymbols.δ(j₁, j₂, j₃, k)
     return (j₃ <= j₁ + j₂) && (j₁ <= j₂ + j₃) && (j₂ <= j₃ + j₁) && (j₁ + j₂ + j₃ <= k) && isinteger(j₁ + j₂ + j₃)
 end
 
-TensorKitSectors.dim(s::SU2kIrrep) = Float64(q_number(twice(s.j) + 1, q(s)))
+dim(s::SU2kIrrep) = Float64(q_number(twice(s.j) + 1, q(s)))
 
-function TensorKitSectors.Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2kIrrep}
+function Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2kIrrep}
     return δ(sa.j, sb.j, sc.j, k(sa))
 end
 
-function TensorKitSectors.Fsymbol(
+function Fsymbol(
         s1::T, s2::T, s3::T, s4::T, s5::T, s6::T
     ) where {T <: SU2kIrrep}
     Nsymbol(s1, s2, s5) && Nsymbol(s5, s3, s4) && Nsymbol(s2, s3, s6) && Nsymbol(s1, s6, s4) || return 0.0
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(s1))
 end
 
-function TensorKitSectors.Rsymbol(a::T, b::T, c::T) where {T <: SU2kIrrep}
-    Nsymbol(a, b, c) || return zero(TensorKitSectors.sectorscalartype(T))
+function Rsymbol(a::T, b::T, c::T) where {T <: SU2kIrrep}
+    Nsymbol(a, b, c) || return zero(sectorscalartype(T))
     factor = q(a)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
 # does this still hold for SU2k?
 #FIXME: what is the q(T) call here?
-# function TensorKitSectors.fusiontensor(a::T, b::T, c::T) where {T<:SU2kIrrep}
+# function fusiontensor(a::T, b::T, c::T) where {T<:SU2kIrrep}
 #     da = twice(a.j) + 1
 #     db = twice(b.j) + 1
 #     dc = twice(c.j) + 1
