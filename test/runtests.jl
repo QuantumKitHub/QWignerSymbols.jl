@@ -11,9 +11,3 @@ using HalfIntegers
         include("q_sector.jl")
     end
 end
-
-# @testset "SU2k_sector" verbose = true begin
-#     @testset "SU2kIrrep" begin
-#         include("SU2k_sector_tests.jl")
-#     end
-# end
