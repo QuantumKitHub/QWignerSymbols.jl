@@ -137,6 +137,21 @@ end
 # -------------------
 struct RootOfUnity{k} <: Number end
 
+"""
+    struct SU2qIrrep{Q} <: Sector
+    SU2qIrrep{Q}(j::Real)
+    SU2qIrrep(j::Real, Q::Number)
+    
+Represents q-deformed irreps of the group ``SU₂``, i.e. the irreps of the ``Rep(su(2)_q)`` quantum group. 
+The irrep is labelled by a half integer `j` which can be entered as an abitrary `Real`, 
+but is stored as a `HalfInt` from the HalfIntegers.jl package.
+
+`Q::Number` is the deformation parameter `q`, which can be either a real number or a root of unity (i.e. `|q| = 1`).
+In the latter case, there is an equivalence between these irreps and the ones of the `SU(2)_k`.
+
+## Fields
+- `j::HalfInt`: the label of the irrep, which can be any non-negative half integer.
+"""
 struct SU2qIrrep{Q} <: Sector
     j::HalfInt
     function SU2qIrrep{Q}(j) where {Q}
