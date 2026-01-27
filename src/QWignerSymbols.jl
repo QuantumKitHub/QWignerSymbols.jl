@@ -27,7 +27,7 @@ function q_number(n::Integer, q::Number)
         abs(q) ≈ 1.0 || throw(DomainError(abs(q), "q must be either real or a U₁ phase"))
         isone(q) && return n
         _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
-        if isapprox(_sum, floor(_sum); atol = 1e-6)
+        if isapprox(_sum, floor(_sum); atol = 1.0e-6)
             return real(round(_sum))
         end
         return real(_sum)

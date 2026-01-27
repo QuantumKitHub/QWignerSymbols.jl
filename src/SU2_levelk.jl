@@ -15,7 +15,7 @@ TensorKitSectors.sectorscalartype(::Type{<:SU2kIrrep}) = ComplexF64
 Base.IteratorSize(::Type{SectorValues{SU2kIrrep{k}}}) where {k} = Base.HasLength()
 Base.length(::SectorValues{SU2kIrrep{k}}) where {k} = k + 1
 function Base.iterate(::SectorValues{SU2kIrrep{k}}, i::Int = 0) where {k}
-    i >= k + 1 && return nothing    
+    i >= k + 1 && return nothing
     return (SU2kIrrep{k}(half(i)), i + 1)
 end
 function Base.getindex(::SectorValues{SU2kIrrep{k}}, i::Int) where {k}
