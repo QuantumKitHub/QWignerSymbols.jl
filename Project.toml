@@ -1,6 +1,6 @@
 name = "QWignerSymbols"
 uuid = "a6ec71dc-95d1-4ca4-9dd3-50060f27aa2b"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Lukas Devos <ldevos98@gmail.com>"]
 
 [deps]
