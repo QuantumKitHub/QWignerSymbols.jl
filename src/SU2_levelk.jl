@@ -27,12 +27,12 @@ function Base.getindex(::SectorValues{SU2kIrrep{k}}, i::Int) where {k}
 end
 
 # sector fusion
-function WignerSymbols.δ(j₁, j₂, j₃, k) #FIXME: type piracy
+function _δ(j₁, j₂, j₃, k)
     return (j₃ <= j₁ + j₂) && (j₁ <= j₂ + j₃) && (j₂ <= j₃ + j₁) && (j₁ + j₂ + j₃ <= k) && isinteger(j₁ + j₂ + j₃)
 end
 
 function Nsymbol(sa::T, sb::T, sc::T) where {T <: SU2kIrrep}
-    return δ(sa.j, sb.j, sc.j, level(sa))
+    return _δ(sa.j, sb.j, sc.j, level(sa))
 end
 
 const SU2kIrrepProdIterator{k} = TensorKitSectors.SectorProductIterator{SU2kIrrep{k}}
