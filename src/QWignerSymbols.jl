@@ -16,11 +16,7 @@ import TensorKitSectors:
 # -------
 export q_number, q_factorial, q_binomial
 export q_wigner3j, q_clebschgordan, q_wigner6j, q_racahW
-export SU2qIrrep, SU2kIrrep
-
-# includes
-# --------
-include("SU2k_sector.jl")
+export SU2qIrrep, SU2kIrrep, RootOfUnity, level
 
 # Q-numbers
 # ---------
@@ -28,10 +24,22 @@ function q_number(n::Integer, q::Number)
     if isa(q, Real)
         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
     elseif isa(q, ComplexF64)
-        norm(q) ≈ 1.0 || throw(DomainError(norm(q), "q must be either real or a U₁ phase"))
-        return real(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+        abs(q) ≈ 1.0 || throw(DomainError(abs(q), "q must be either real or a U₁ phase"))
+        isone(q) && return n
+        _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
+        if isapprox(_sum, floor(_sum); atol = 1e-6)
+            return real(round(_sum))
+        end
+        return real(_sum)
     end
 end
+# function q_number(n::Integer, q::Real)
+#         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+# end
+# function q_number(n::Integer, q::Complex)
+#     abs(q) ≈ 1.0 || throw(DomainError(abs(q), "q must be either real or a U₁ phase"))
+#     return real(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+# end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
 
 q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init = 1.0)
@@ -127,11 +135,19 @@ end
 # TensorKitSectors extension
 # Rep(su(2)_q): q-deformed SU(2) irreps
 # -------------------
+struct RootOfUnity{k} <: Number end
+
 struct SU2qIrrep{Q} <: Sector
     j::HalfInt
     function SU2qIrrep{Q}(j) where {Q}
         j >= zero(j) || throw(DomainError(j, "Not a valid SU₂ irrep"))
         return new{Q}(j)
+    end
+    function SU2qIrrep{RootOfUnity{k}}(j) where {k}
+        j >= zero(j) || throw(DomainError(j, "Not a valid SU₂ irrep"))
+        k >= 1 || throw(DomainError(k, "Level k must be positive"))
+        j <= half(k) || throw(DomainError(j, lazy"j can be at most k/2 = $(half(k))"))
+        return new{RootOfUnity{k}}(j)
     end
 end
 
@@ -145,12 +161,12 @@ Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 TensorKitSectors.sectorscalartype(::Type{<:SU2qIrrep}) = Float64
 
 # sector values
-Base.IteratorSize(::Type{SectorValues{I}}) where {I <: SU2qIrrep} = Base.IsInfinite()
-Base.iterate(::SectorValues{I}, i::Int = 0) where {I <: SU2qIrrep} = (I(half(i)), i + 1)
-function Base.getindex(::SectorValues{I}, i::Int) where {I <: SU2qIrrep}
-    return 1 <= i ? I(half(i - 1)) : throw(BoundsError(values(I), i))
+Base.IteratorSize(::Type{SectorValues{SU2qIrrep{Q}}}) where {Q} = Base.IsInfinite()
+Base.iterate(::SectorValues{SU2qIrrep{Q}}, i::Int = 0) where {Q} = (SU2qIrrep{Q}(half(i)), i + 1)
+function Base.getindex(::SectorValues{SU2qIrrep{Q}}, i::Int) where {Q}
+    return 1 <= i ? SU2qIrrep{Q}(half(i - 1)) : throw(BoundsError(values(SU2qIrrep{Q}), i))
 end
-findindex(::SectorValues{I}, s::I) where {I <: SU2qIrrep} = twice(s.j) + 1
+findindex(::SectorValues{SU2qIrrep{Q}}, s::SU2qIrrep{Q}) where {Q} = twice(s.j) + 1
 
 # sector fusion
 FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
@@ -175,7 +191,7 @@ Fsymbol(s1::I, s2::I, s3::I, s4::I, s5::I, s6::I) where {I <: SU2qIrrep} =
 BraidingStyle(::Type{<:SU2qIrrep}) = Anyonic()
 
 function Rsymbol(a::I, b::I, c::I) where {I <: SU2qIrrep}
-    Nsymbol(a, b, c) || return 0.0
+    Nsymbol(a, b, c) || return zero(sectorscalartype(I))
     factor = q(I)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
@@ -207,4 +223,5 @@ end
 #     return (offset + 1):(offset + (twice(c.j) + 1) * dim(V, c))
 # end
 
+include("SU2_levelk.jl")
 end
