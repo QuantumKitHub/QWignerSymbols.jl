@@ -21,10 +21,10 @@ export SU2qIrrep, SU2kIrrep, RootOfUnity, level
 # Q-numbers
 # ---------
 function q_number(n::Integer, q::Number)
-    if isa(q, Real)
+    if isa(q, Real) #potential TODO: allow complex numbers, which should give same results as RootOfUnity
         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
-    elseif isa(q, ComplexF64)
-        abs(q) ≈ 1.0 || throw(DomainError(abs(q), "q must be either real or a U₁ phase"))
+    elseif isa(q, RootOfUnity)
+        q = convert(ComplexF64, q)
         isone(q) && return n
         _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
         if isapprox(_sum, floor(_sum); atol = 1.0e-6)
@@ -33,13 +33,6 @@ function q_number(n::Integer, q::Number)
         return real(_sum)
     end
 end
-# function q_number(n::Integer, q::Real)
-#         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
-# end
-# function q_number(n::Integer, q::Complex)
-#     abs(q) ≈ 1.0 || throw(DomainError(abs(q), "q must be either real or a U₁ phase"))
-#     return real(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
-# end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
 
 q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init = 1.0)
@@ -173,7 +166,9 @@ Base.convert(T::Type{<:SU2qIrrep}, j::Real) = T(j)
 Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 
-TensorKitSectors.sectorscalartype(::Type{<:SU2qIrrep}) = Float64
+function TensorKitSectors.sectorscalartype(T::Type{<:SU2qIrrep{Q}}) where {Q}
+    return isa(q(T), Real) ? Float64 : ComplexF64
+end
 
 # sector values
 Base.IteratorSize(::Type{SectorValues{SU2qIrrep{Q}}}) where {Q} = Base.IsInfinite()
@@ -199,15 +194,24 @@ unit(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 dual(s::SU2qIrrep) = s
 dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
 
-Fsymbol(s1::I, s2::I, s3::I, s4::I, s5::I, s6::I) where {I <: SU2qIrrep} =
-    sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(I))
+function Fsymbol(s1::I, s2::I, s3::I, s4::I, s5::I, s6::I) where {I <: SU2qIrrep}
+    T = sectorscalartype(I)
+    Nsymbol(s1, s2, s5) && Nsymbol(s5, s3, s4) && Nsymbol(s2, s3, s6) && Nsymbol(s1, s6, s4) || return zero(T)
+    return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(I))
+end
 
 # sector braiding
 BraidingStyle(::Type{<:SU2qIrrep}) = Anyonic()
 
-function Rsymbol(a::I, b::I, c::I) where {I <: SU2qIrrep}
-    Nsymbol(a, b, c) || return zero(sectorscalartype(I))
-    factor = q(I)^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
+function Rsymbol(a::SU2qIrrep{Q}, b::SU2qIrrep{Q}, c::SU2qIrrep{Q}) where {Q}
+    Nsymbol(a, b, c) || return zero(sectorscalartype(SU2qIrrep{Q}))
+    _q = q(typeof(a))
+    if isa(_q, RootOfUnity)
+        _q = convert(ComplexF64, _q)
+    elseif isa(_q, Real) #potential TODO: allow complex numbers, which should give same results as RootOfUnity
+        _q = Q
+    end
+    factor = _q^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
