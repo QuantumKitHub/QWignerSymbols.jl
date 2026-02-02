@@ -24,13 +24,23 @@ function q_number(n::Integer, q::Number)
     if isa(q, Real) #potential TODO: allow complex numbers, which should give same results as RootOfUnity
         return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
     elseif isa(q, RootOfUnity)
-        q = convert(ComplexF64, q)
-        isone(q) && return n
-        _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
+        _q = convert(ComplexF64, q)
+        isone(_q) && return n
+        _sum = sum(i -> _q^((n + 1) / 2 - i), 1:n)
         if isapprox(_sum, floor(_sum); atol = 1.0e-6)
             return real(round(_sum))
         end
         return real(_sum)
+    # elseif isa(q, Complex) # complex-valued q, but not passed via RootOfUnity
+    #     isone(q) && return n
+    #     abs(q) == 1.0 || throw(DomainError(q, "q must be a root of unity for complex q-numbers")) # at least i think so, idk if general complex q-deformations are a thing
+    #     _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
+    #     if isapprox(_sum, floor(_sum); atol = 1.0e-6)
+    #         return real(round(_sum))
+    #     end
+    #     return real(_sum)
+    # else
+    #     throw(DomainError(q, "q must be Real, Complex, or RootOfUnity"))
     end
 end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
