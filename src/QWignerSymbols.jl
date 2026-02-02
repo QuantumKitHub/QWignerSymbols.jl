@@ -176,9 +176,8 @@ Base.convert(T::Type{<:SU2qIrrep}, j::Real) = T(j)
 Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 
-function TensorKitSectors.sectorscalartype(T::Type{<:SU2qIrrep{Q}}) where {Q}
-    return isa(q(T), Real) ? Float64 : ComplexF64
-end
+TensorKitSectors.fusionscalartype(::Type{<:SU2qIrrep{Q}}) where {Q} = Float64
+TensorKitSectors.sectorscalartype(T::Type{<:SU2qIrrep{Q}}) where {Q} = isa(q(T), Real) ? Float64 : ComplexF64
 
 # sector values
 Base.IteratorSize(::Type{SectorValues{SU2qIrrep{Q}}}) where {Q} = Base.IsInfinite()
@@ -205,7 +204,7 @@ dual(s::SU2qIrrep) = s
 dim(s::SU2qIrrep) = q_number(twice(s.j) + 1, q(typeof(s)))
 
 function Fsymbol(s1::I, s2::I, s3::I, s4::I, s5::I, s6::I) where {I <: SU2qIrrep}
-    T = sectorscalartype(I)
+    T = fusionscalartype(I)
     Nsymbol(s1, s2, s5) && Nsymbol(s5, s3, s4) && Nsymbol(s2, s3, s6) && Nsymbol(s1, s6, s4) || return zero(T)
     return sqrt(dim(s5) * dim(s6)) * q_racahW(s1.j, s2.j, s4.j, s3.j, s5.j, s6.j, q(I))
 end
@@ -214,7 +213,7 @@ end
 BraidingStyle(::Type{<:SU2qIrrep}) = Anyonic()
 
 function Rsymbol(a::SU2qIrrep{Q}, b::SU2qIrrep{Q}, c::SU2qIrrep{Q}) where {Q}
-    Nsymbol(a, b, c) || return zero(sectorscalartype(SU2qIrrep{Q}))
+    Nsymbol(a, b, c) || return zero(braidingscalartype(SU2qIrrep{Q}))
     _q = q(typeof(a))
     if isa(_q, RootOfUnity)
         _q = convert(ComplexF64, _q)

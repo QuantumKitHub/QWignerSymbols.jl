@@ -12,7 +12,7 @@ WignerSymbols = "9f57e263-0b3d-5e2e-b1be-24f2bb48858b"
 [compat]
 HalfIntegers = "1"
 Random = "1"
-TensorKitSectors = "0.3.4"
+TensorKitSectors = "0.3.5"
 TensorOperations = "5"
 WignerSymbols = "2"
 julia = "1.10"
