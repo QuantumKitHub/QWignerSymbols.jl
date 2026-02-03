@@ -18,31 +18,31 @@ export q_number, q_factorial, q_binomial
 export q_wigner3j, q_clebschgordan, q_wigner6j, q_racahW
 export SU2qIrrep, SU2kIrrep, RootOfUnity, level
 
+#TODO: docstring
+struct RootOfUnity{k} <: Number end
+
 # Q-numbers
 # ---------
-function q_number(n::Integer, q::Number)
-    if isa(q, Real) #potential TODO: allow complex numbers, which should give same results as RootOfUnity
-        return Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
-    elseif isa(q, RootOfUnity)
-        _q = convert(ComplexF64, q)
-        isone(_q) && return n
-        _sum = sum(i -> _q^((n + 1) / 2 - i), 1:n)
-        if isapprox(_sum, floor(_sum); atol = 1.0e-6)
-            return real(round(_sum))
-        end
-        return real(_sum)
-    # elseif isa(q, Complex) # complex-valued q, but not passed via RootOfUnity
-    #     isone(q) && return n
-    #     abs(q) == 1.0 || throw(DomainError(q, "q must be a root of unity for complex q-numbers")) # at least i think so, idk if general complex q-deformations are a thing
-    #     _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
-    #     if isapprox(_sum, floor(_sum); atol = 1.0e-6)
-    #         return real(round(_sum))
-    #     end
-    #     return real(_sum)
-    # else
-    #     throw(DomainError(q, "q must be Real, Complex, or RootOfUnity"))
+q_number(n::Integer, q::Number) =Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 - i), 1:n))
+function q_number(n::Integer, q::RootOfUnity)
+    _q = convert(ComplexF64, q)
+    isone(_q) && return n
+    _sum = sum(i -> _q^((n + 1) / 2 - i), 1:n)
+    if isapprox(_sum, floor(_sum); atol = 1.0e-6)
+        return real(round(_sum))
     end
+    return real(_sum)
 end
+#potential TODO: allow complex numbers, which should give same results as RootOfUnity
+# function q_number(n::Integer, q::Complex)
+#     isone(q) && return n
+#     abs(q) == 1.0 || throw(DomainError(q, "q must be a root of unity for complex q-numbers")) # at least i think so, idk if general complex q-deformations are a thing
+#     _sum = sum(i -> q^((n + 1) / 2 - i), 1:n)
+#     if isapprox(_sum, floor(_sum); atol = 1.0e-6)
+#         return real(round(_sum))
+#     end
+#     return real(_sum)
+# end
 q_number(n::Number, q::Number) = q_number(Int(n), q)
 
 q_factorial(n::Integer, q::Number) = prod(n -> q_number(n, q), 1:n; init = 1.0)
@@ -138,7 +138,6 @@ end
 # TensorKitSectors extension
 # Rep(su(2)_q): q-deformed SU(2) irreps
 # -------------------
-struct RootOfUnity{k} <: Number end
 
 """
     struct SU2qIrrep{Q} <: Sector
@@ -180,12 +179,12 @@ TensorKitSectors.fusionscalartype(::Type{<:SU2qIrrep{Q}}) where {Q} = Float64
 TensorKitSectors.sectorscalartype(T::Type{<:SU2qIrrep{Q}}) where {Q} = isa(q(T), Real) ? Float64 : ComplexF64
 
 # sector values
-Base.IteratorSize(::Type{SectorValues{SU2qIrrep{Q}}}) where {Q} = Base.IsInfinite()
-Base.iterate(::SectorValues{SU2qIrrep{Q}}, i::Int = 0) where {Q} = (SU2qIrrep{Q}(half(i)), i + 1)
-function Base.getindex(::SectorValues{SU2qIrrep{Q}}, i::Int) where {Q}
-    return 1 <= i ? SU2qIrrep{Q}(half(i - 1)) : throw(BoundsError(values(SU2qIrrep{Q}), i))
+Base.IteratorSize(::Type{SectorValues{I}}) where {I <: SU2qIrrep} = Base.IsInfinite()
+Base.iterate(::SectorValues{I}, i::Int = 0) where {I <: SU2qIrrep} = (I(half(i)), i + 1)
+function Base.getindex(::SectorValues{I}, i::Int) where {I <: SU2qIrrep}
+    return 1 <= i ? I(half(i - 1)) : throw(BoundsError(values(I), i))
 end
-findindex(::SectorValues{SU2qIrrep{Q}}, s::SU2qIrrep{Q}) where {Q} = twice(s.j) + 1
+findindex(::SectorValues{I}, s::I) where {I <: SU2qIrrep} = twice(s.j) + 1
 
 # sector fusion
 FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
@@ -212,15 +211,14 @@ end
 # sector braiding
 BraidingStyle(::Type{<:SU2qIrrep}) = Anyonic()
 
+function Base.:^(q::Type{RootOfUnity{k}}, n::Float64) where {k}
+    _q = convert(ComplexF64, q())
+    return _q^n
+end
+
 function Rsymbol(a::SU2qIrrep{Q}, b::SU2qIrrep{Q}, c::SU2qIrrep{Q}) where {Q}
     Nsymbol(a, b, c) || return zero(braidingscalartype(SU2qIrrep{Q}))
-    _q = q(typeof(a))
-    if isa(_q, RootOfUnity)
-        _q = convert(ComplexF64, _q)
-    elseif isa(_q, Real) #potential TODO: allow complex numbers, which should give same results as RootOfUnity
-        _q = Q
-    end
-    factor = _q^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
+    factor = Q^((c.j * (c.j + 1) - a.j * (a.j + 1) - b.j * (b.j + 1)) / 2)
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
