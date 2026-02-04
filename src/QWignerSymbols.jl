@@ -27,11 +27,11 @@ q_number(n::Integer, q::Number) =Float64(isone(q) ? n : sum(i -> q^((n + 1) / 2 
 function q_number(n::Integer, q::RootOfUnity)
     _q = convert(ComplexF64, q)
     isone(_q) && return n
-    _sum = sum(i -> _q^((n + 1) / 2 - i), 1:n)
+    _sum = real(sum(i -> _q^((n + 1) / 2 - i), 1:n))
     if isapprox(_sum, floor(_sum); atol = 1.0e-6)
-        return real(round(_sum))
+        return round(_sum)
     end
-    return real(_sum)
+    return _sum
 end
 #potential TODO: allow complex numbers, which should give same results as RootOfUnity
 # function q_number(n::Integer, q::Complex)
