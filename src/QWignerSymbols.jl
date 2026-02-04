@@ -2,15 +2,11 @@ module QWignerSymbols
 
 # imports
 # --------
-using WignerSymbols
 using WignerSymbols: δ, reorder6j
 using HalfIntegers
 using TensorKitSectors
-import TensorKitSectors:
-    Nsymbol, Fsymbol, Rsymbol, fusiontensor,
-    unit, dual, dim,
-    FusionStyle, BraidingStyle,
-    findindex
+import TensorKitSectors: Nsymbol, Fsymbol, Rsymbol, fusiontensor,
+    unit, dual, dim, FusionStyle, BraidingStyle, findindex
 
 # exports
 # -------
