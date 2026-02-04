@@ -7,8 +7,7 @@ testsuite_path = joinpath(
 include(testsuite_path)
 
 sectorlist = (
-    SU2qIrrep{1.11}, SU2qIrrep{1.3}, SU2kIrrep{2}, SU2kIrrep{3}, SU2kIrrep{4},
-    SU2kIrrep{5}, SU2kIrrep{6}, SU2kIrrep{7}, SU2kIrrep{8}, SU2kIrrep{9}, SU2kIrrep{10},
+    SU2qIrrep{1.11}, SU2qIrrep{1.3}, ntuple(x -> SU2qIrrep{RootOfUnity(x + 1)}, 8)...,
 )
 
 for sector in sectorlist
