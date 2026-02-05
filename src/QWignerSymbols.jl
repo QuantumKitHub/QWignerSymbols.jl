@@ -12,7 +12,7 @@ import TensorKitSectors: Nsymbol, Fsymbol, Rsymbol, fusiontensor,
 # -------
 export q_number, q_factorial, q_binomial
 export q_wigner3j, q_clebschgordan, q_wigner6j, q_racahW
-export SU2qIrrep, RootOfUnity, level
+export SU2qIrrep, SU2kIrrep, RootOfUnity, level
 
 include("rootofunity.jl")
 include("qanalogs.jl")

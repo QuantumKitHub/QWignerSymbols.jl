@@ -12,7 +12,7 @@ The irrep is labelled by a half integer `j` which can be entered as an abitrary 
 but is stored as a `HalfInt` from the HalfIntegers.jl package.
 
 `Q::Number` is the deformation parameter `q`, which can be either a real number or a root of unity (i.e. `|q| = 1`).
-In the latter case, there is an equivalence between these irreps and the ones of the `SU(2)_k`.
+In the latter case, there is an equivalence between these irreps and the ones of the `SU(2)_k`, see also [`SU2kIrrep`](@ref).
 
 ## Fields
 - `j::HalfInt`: the label of the irrep, which can be any non-negative half integer.
@@ -36,6 +36,7 @@ end
 end
 
 SU2qIrrep(j, q::Number) = SU2qIrrep{q}(j)
+SU2kIrrep(j, k::Integer) = SU2qIrrep(j, RootOfUnity(k))
 
 q(a::SU2qIrrep) = q(typeof(a))
 q(::Type{SU2qIrrep{Q}}) where {Q} = Q
@@ -99,7 +100,6 @@ end
 
 # ------------------------------------------------------------------------------------
 
-
 Nsymbol(sa::I, sb::I, sc::I) where {I <: SU2qIrrep} = q_δ(sa.j, sb.j, sc.j, q(I))
 
 function Fsymbol(s1::I, s2::I, s3::I, s4::I, s5::I, s6::I) where {I <: SU2qIrrep}
@@ -114,6 +114,16 @@ function Rsymbol(a::I, b::I, c::I) where {I <: SU2qIrrep}
     return isodd(convert(Int, a.j + b.j - c.j)) ? -factor : factor
 end
 
+# ------------------------------------------------------------------------------------
+
+function Base.show(io::IO, s::SU2qIrrep)
+    _q = q(s)
+    return if _q isa RootOfUnity
+        print(io, "SU2kIrrep(", s.j, ", ", level(_q), ")")
+    else
+        print(io, "SU2qIrrep(", s.j, ", ", _q, ")")
+    end
+end
 
 # TODO: this seems to not be compatible with testsuite
 # function fusiontensor(a::I, b::I, c::I) where {I <: SU2qIrrep}
