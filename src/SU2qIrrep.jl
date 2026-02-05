@@ -3,6 +3,23 @@
 # -------------------
 
 """
+    abstract type SU2_{k} <: Group
+
+Abstract type for the ``q``-deformed version of ``SU(2)`` at level ``k``.
+"""
+abstract type SU2_{k} <: TensorKitSectors.Group end
+
+const SU₂_₂ = SU2_{2}
+const SU₂_₃ = SU2_{3}
+const SU₂_₄ = SU2_{4}
+const SU₂_₅ = SU2_{5}
+type_repr(::Type{SU₂_₂}) = "SU₂_₂"
+type_repr(::Type{SU₂_₃}) = "SU₂_₃"
+type_repr(::Type{SU₂_₄}) = "SU₂_₄"
+type_repr(::Type{SU₂_₅}) = "SU₂_₅"
+
+
+"""
     struct SU2qIrrep{Q} <: Sector
     SU2qIrrep{Q}(j::Real)
     SU2qIrrep(j::Real, Q::Number)
@@ -116,13 +133,19 @@ end
 
 # ------------------------------------------------------------------------------------
 
+Base.getindex(::TensorKitSectors.IrrepTable, G::Type{<:SU2_{k}}) where {k} = SU2qIrrep{RootOfUnity(k)}
+
+type_repr(::Type{SU2qIrrep{Q}}) where {Q} =
+    Q isa RootOfUnity ? "Irrep[$(type_repr(SU2_{level(Q)}))]" : "SU2qIrrep{$Q}"
+
 function Base.show(io::IO, s::SU2qIrrep)
-    _q = q(s)
-    return if _q isa RootOfUnity
-        print(io, "SU2kIrrep(", s.j, ", ", level(_q), ")")
+    I = typeof(s)
+    if get(io, :typeinfo, nothing) !== I
+        print(io, type_repr(I), "(", s.j, ")")
     else
-        print(io, "SU2qIrrep(", s.j, ", ", _q, ")")
+        print(io, s.j)
     end
+    return nothing
 end
 
 # TODO: this seems to not be compatible with testsuite

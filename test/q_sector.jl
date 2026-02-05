@@ -1,4 +1,4 @@
-import TensorKitSectors
+using TensorKitSectors
 
 testsuite_path = joinpath(
     dirname(dirname(pathof(TensorKitSectors))), # TensorKitSectors root
