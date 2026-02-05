@@ -18,7 +18,6 @@ type_repr(::Type{SU₂_₃}) = "SU₂_₃"
 type_repr(::Type{SU₂_₄}) = "SU₂_₄"
 type_repr(::Type{SU₂_₅}) = "SU₂_₅"
 
-
 """
     struct SU2qIrrep{Q} <: Sector
     SU2qIrrep{Q}(j::Real)
@@ -46,14 +45,14 @@ end
     (zero(j) ≤ j || throw(DomainError(j, "Not a valid SU₂ irrep")); nothing)
 @noinline function _isvalid_irrep(j::Real, q::RootOfUnity)
     zero(j) ≤ j || throw(DomainError(j, "Not a valid SU₂ irrep"))
-    k = level(q)
+    k = q.level
     1 ≤ k || throw(DomainError(k, "Level must be positive"))
     j ≤ half(k) || throw(DomainError(j, lazy"j can be at most k/2 = $(half(k))"))
     return nothing
 end
 
 SU2qIrrep(j, q::Number) = SU2qIrrep{q}(j)
-SU2kIrrep(j, k::Integer) = SU2qIrrep(j, RootOfUnity(k))
+SU2kIrrep(j, k::Integer) = SU2qIrrep(j, RootOfUnity(_root(k)))
 
 q(a::SU2qIrrep) = q(typeof(a))
 q(::Type{SU2qIrrep{Q}}) where {Q} = Q
@@ -75,7 +74,7 @@ unit(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 dual(s::SU2qIrrep) = s
 dim(s::SU2qIrrep) = _dim(s.j, q(s))
 _dim(j, q::Number) = q_number(twice(j) + 1, q)
-_dim(j, q::RootOfUnity) = sinpi((2j + 1) / (level(q) + 2)) / sinpi(1 / (level(q) + 2))
+_dim(j, q::RootOfUnity) = sinpi((2j + 1) / (q.level + 2)) / sinpi(1 / (q.level + 2))
 
 # ------------------------------------------------------------------------------------
 
@@ -88,7 +87,7 @@ _iterate(::Type{I}, q::RootOfUnity, i::Int) where {I} = i >= length(values(I)) ?
 
 function Base.length(::SectorValues{I}) where {I <: SU2qIrrep}
     q(I) isa RootOfUnity || throw(ArgumentError("length is infinite"))
-    return level(q(I)) + 1
+    return q(I).level + 1
 end
 
 Base.checkbounds(::Type{Bool}, vals::SectorValues{I}, i::Int) where {I <: SU2qIrrep} =
@@ -108,7 +107,7 @@ const SU2qIrrepProdIterator{Q} = TensorKitSectors.SectorProductIterator{SU2qIrre
 Base.IteratorSize(::Type{<:SU2qIrrepProdIterator}) = Base.HasLength()
 
 _stop(a, b, q) = a.j + b.j
-_stop(a, b, q::RootOfUnity) = min(a.j + b.j, level(q) - a.j - b.j)
+_stop(a, b, q::RootOfUnity) = min(a.j + b.j, q.level - a.j - b.j)
 
 Base.length(it::SU2qIrrepProdIterator{Q}) where {Q} = length(abs(it.a.j - it.b.j):_stop(it.a, it.b, Q))
 function Base.iterate(it::SU2qIrrepProdIterator{Q}, state = abs(it.a.j - it.b.j)) where {Q}
@@ -133,10 +132,11 @@ end
 
 # ------------------------------------------------------------------------------------
 
-Base.getindex(::TensorKitSectors.IrrepTable, G::Type{<:SU2_{k}}) where {k} = SU2qIrrep{RootOfUnity(k)}
+Base.getindex(::TensorKitSectors.IrrepTable, G::Type{<:SU2_{k}}) where {k} =
+    SU2qIrrep{RootOfUnity(_root(k))}
 
 type_repr(::Type{SU2qIrrep{Q}}) where {Q} =
-    Q isa RootOfUnity ? "Irrep[$(type_repr(SU2_{level(Q)}))]" : "SU2qIrrep{$Q}"
+    Q isa RootOfUnity ? "Irrep[$(type_repr(SU2_{Q.level}))]" : "SU2qIrrep{$Q}"
 
 function Base.show(io::IO, s::SU2qIrrep)
     I = typeof(s)

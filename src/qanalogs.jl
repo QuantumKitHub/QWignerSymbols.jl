@@ -13,7 +13,7 @@ end
 # Wigner symbols
 # --------------
 q_δ(j₁, j₂, j₃, q::Number) = δ(j₁, j₂, j₃)
-q_δ(j₁, j₂, j₃, q::RootOfUnity) = δ(j₁, j₂, j₃) && j₁ + j₂ + j₃ ≤ level(q)
+q_δ(j₁, j₂, j₃, q::RootOfUnity) = δ(j₁, j₂, j₃) && j₁ + j₂ + j₃ ≤ q.level
 
 function q_wigner3j(j₁, j₂, j₃, m₁, m₂, m₃, q::Number)
     if !δ(j₁, j₂, j₃) || !iszero(m₁ + m₂ + m₃)
