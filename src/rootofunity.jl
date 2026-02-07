@@ -1,7 +1,10 @@
 """
-    RootOfUnity(k::Integer)
+    RootOfUnity(n::Integer)
 
-Custom number type to represent the ``n``-th root of unity, i.e. `RootOfUnity(n)^n ≈ 1`
+Custom number type to represent the ``n``-th root of unity, i.e. `RootOfUnity(n)^n ≈ 1`.
+For `SU2qIrrep` with the deformation parameter `q` being a root of unity, the convention is
+that ``q = exp(2πi / (k + 2))``, with ``k`` the level of ``SU(2)_k``. 
+Therefore, the ``n``-th root of unity corresponds to level ``n - 2``.
 """
 struct RootOfUnity <: Number
     root::Int

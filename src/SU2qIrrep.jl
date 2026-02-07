@@ -27,8 +27,9 @@ Represents q-deformed irreps of the group ``SU₂``, i.e. the irreps of the ``Re
 The irrep is labelled by a half integer `j` which can be entered as an abitrary `Real`,
 but is stored as a `HalfInt` from the HalfIntegers.jl package.
 
-`Q::Number` is the deformation parameter `q`, which can be either a real number or a root of unity (i.e. `|q| = 1`).
-In the latter case, there is an equivalence between these irreps and the ones of the `SU(2)_k`, see also [`SU2kIrrep`](@ref).
+`Q::Number` is the deformation parameter `q`, which can be either a real number or a root of unity (i.e. ``|q| = 1``).
+In the latter case, there is an equivalence between these irreps and the ones of the ``SU(2)_k``, see also [`SU2kIrrep`](@ref).
+The convention used here is that ``q = exp(2πi / (k + 2))``, with ``k`` the level of ``SU(2)_k``. 
 
 ## Fields
 - `j::HalfInt`: the label of the irrep, which can be any non-negative half integer.
@@ -52,6 +53,13 @@ end
 end
 
 SU2qIrrep(j, q::Number) = SU2qIrrep{q}(j)
+
+"""
+    SU2kIrrep(j::Real, k::Integer)
+
+Construct the `SU2qIrrep` where `q` is the primitive root of unity corresponding to level ``k``, 
+i.e. ``q = exp(2πi / (k + 2))``. See also [`RootOfUnity`](@ref).
+"""
 SU2kIrrep(j, k::Integer) = SU2qIrrep(j, RootOfUnity(_root(k)))
 
 q(a::SU2qIrrep) = q(typeof(a))
@@ -74,7 +82,7 @@ unit(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 dual(s::SU2qIrrep) = s
 dim(s::SU2qIrrep) = _dim(s.j, q(s))
 _dim(j, q::Number) = q_number(twice(j) + 1, q)
-_dim(j, q::RootOfUnity) = sinpi((2j + 1) / (q.level + 2)) / sinpi(1 / (q.level + 2))
+_dim(j, q::RootOfUnity) = sinpi((2j + 1) / _root(q.level)) / sinpi(1 / _root(q.level))
 
 # ------------------------------------------------------------------------------------
 
