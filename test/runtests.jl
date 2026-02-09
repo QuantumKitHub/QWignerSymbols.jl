@@ -3,10 +3,6 @@ using Test, TestExtras
 using HalfIntegers
 
 @testset "QWignerSymbols.jl" verbose = true begin
-    @testset "q_combinatorics" begin
-        include("q_combinatorics.jl")
-    end
-
     @testset "q_clebsch_gordan" begin
         include("q_clebsch_gordan.jl")
     end

@@ -33,8 +33,8 @@ smalljlist = 0:(1 // 2):5
     end
 end
 
-q = 1.1
 @testset "clebschgordan: orthogonality relations" begin
+    q = 1.1
     for j1 in smalljlist, j2 in smalljlist
         d1::Int = 2 * j1 + 1
         d2::Int = 2 * j2 + 1
@@ -53,6 +53,7 @@ q = 1.1
 end
 
 @testset "wigner3j: orthogonality relations" begin
+    q = 1.1
     for j1 in smalljlist, j2 in smalljlist
         d1::Int = 2 * j1 + 1
         d2::Int = 2 * j2 + 1
