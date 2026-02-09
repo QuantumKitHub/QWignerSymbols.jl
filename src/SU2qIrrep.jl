@@ -82,7 +82,7 @@ unit(::Type{T}) where {T <: SU2qIrrep} = T(zero(HalfInt))
 dual(s::SU2qIrrep) = s
 dim(s::SU2qIrrep) = _dim(s.j, q(s))
 _dim(j, q::Number) = q_number(twice(j) + 1, q)
-_dim(j, q::RootOfUnity) = sinpi((2j + 1) / _root(q.level)) / sinpi(1 / _root(q.level))
+_dim(j, q::RootOfUnity) = sinpi((2j + 1) / q.root) / sinpi(1 / q.root)
 
 # ------------------------------------------------------------------------------------
 
