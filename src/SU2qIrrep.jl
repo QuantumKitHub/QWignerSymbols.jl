@@ -70,11 +70,14 @@ Base.hash(s::SU2qIrrep, h::UInt) = hash(s.j, h)
 Base.isless(s1::T, s2::T) where {T <: SU2qIrrep} = isless(s1.j, s2.j)
 
 FusionStyle(::Type{<:SU2qIrrep}) = SimpleFusion()
-BraidingStyle(::Type{<:SU2qIrrep}) = Anyonic()
+BraidingStyle(::Type{SU2qIrrep{Q}}) where {Q} = Q isa RootOfUnity ? Anyonic() : NoBraiding()
 
 TensorKitSectors.fusionscalartype(::Type{I}) where {I <: SU2qIrrep} = float(typeof(q(I)))
 TensorKitSectors.sectorscalartype(::Type{I}) where {I <: SU2qIrrep} = float(typeof(q(I)))
-TensorKitSectors.braidingscalartype(::Type{I}) where {I <: SU2qIrrep} = float(typeof(q(I)))
+function TensorKitSectors.braidingscalartype(::Type{I}) where {I <: SU2qIrrep}
+    BraidingStyle(I) === NoBraiding() && throw(ArgumentError("No braiding for sector $I"))
+    return float(typeof(q(I)))
+end
 
 # ------------------------------------------------------------------------------------
 #
